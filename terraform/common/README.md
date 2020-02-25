@@ -1,4 +1,4 @@
 
 
 ### Architecture
-![typical](./images/common.jpg)
+![typical](./images/common.png)
