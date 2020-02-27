@@ -1,3 +1,5 @@
+### https://registry.terraform.io/modules/Azure/network/azurerm/2.0.0
+
 module "network" {
   source  = "Azure/network/azurerm"
   version = "2.0.0"
