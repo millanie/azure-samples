@@ -1,0 +1,12 @@
+[monitoring]
+{ip address or hostname}
+
+[monitoring:vars]
+# ansible_connection=ssh
+# ansible_port=22
+# ansible_user=azuser
+# ansible_become=true
+
+# [all:children]
+# monitoring
+

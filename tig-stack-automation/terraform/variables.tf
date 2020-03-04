@@ -17,3 +17,5 @@ variable "jumpbox_ip" {default = ""}
 variable "jumpbox_port" {default = ""}
 variable "rule_name" {default = ""}
 
+variable "client_ip" {default = ""}
+variable "grafana_port" {default = ""}
