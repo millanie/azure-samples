@@ -1,14 +1,20 @@
-### Terraform
+
+### environment
+* OS 
+   This script is based on CentOS 7. 
+   will include the script for Windows Server 2016 
+* Terraform 
+  0.12
+
+### Overview
+#### Terraform
 Create a Virtual machine for TIG stack monitoring master on Azure
 
-### ansible 
+#### ansible 
 Install telegraf / influxDB / grafana
 
-### packer
+#### packer
 Make image by using packer
 
 
-### environment
-This script is based on CentOS. 
-will include the script for Windows
 
