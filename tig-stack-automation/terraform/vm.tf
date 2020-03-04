@@ -77,3 +77,17 @@ resource "azurerm_network_security_rule" "monitoring" {
     network_security_group_name = azurerm_network_security_group.monitoring.name
 }
 
+resource "azurerm_network_security_rule" "grafana" {
+    name = "${var.rule_name}-grafana"
+    priority = 110
+    direction = "Inbound"
+    access = "Allow"
+    protocol = "Tcp"
+    source_port_range = "*" 
+    destination_port_range = var.grafana_port
+    source_address_prefix = var.client_ip
+    destination_address_prefix = "*"
+    resource_group_name = var.resource_group_name
+    network_security_group_name = azurerm_network_security_group.monitoring.name
+}
+

@@ -1,0 +1,67 @@
+---
+- hosts: monitoring 
+
+  tasks:
+  - name: Add telegraf repository
+    yum_repository:
+      name: influxdb
+      description: InfluxDB Repository - RHEL $releasever
+      baseurl: https://repos.influxdata.com/rhel/$releasever/$basearch/stable
+      gpgcheck: yes
+      gpgkey: https://repos.influxdata.com/influxdb.key
+
+  - name : Install InfluxDB packages
+    yum:
+      name: influxdb
+      state: present
+
+  - name: Modify InfluxDB hostname
+    replace:
+      dest=/etc/influxdb/influxdb.conf
+      regexp=`hostname= "localhost"`
+      replace=`hostname = "{{ ansible_hostname }}"`
+      backup=yes
+
+  - name: Start the InfluxDB service
+    service:
+      name: influxdb
+      state: restarted
+
+  - name: Install telegraf
+    yum:
+      name: telegraf
+      state: latest
+
+  - name: restart telegraf
+    service:
+      name: telegraf
+      state: restarted
+      enabled: yes
+
+  - name: Add grafana repository 
+    yum_repository:
+      name: grafana
+      description: Grafana Repository - RHEL $releasever
+      baseurl: https://packages.grafana.com/oss/rpm
+      gpgcheck: yes
+      gpgkey: https://packages.grafana.com/gpg.key 
+  
+  - name: Install grafana
+    yum: 
+      name: grafana
+      state: present
+
+
+  - name: restart grafana 
+    service:
+      name: grafana-server 
+      state: restarted
+      enabled: yes
+
+  handlers:
+  - name: restart telegraf
+    service:
+      name: telegraf
+      state: restarted
+
+
