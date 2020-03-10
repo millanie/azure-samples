@@ -13,7 +13,9 @@ password = "azure123!@#"
 
 os_sku = ["OpenLogic","CentOS","7.6","latest"]
 
-jumpbox_ip = "52.141.29.70"
+# jumpbox_ip = 
 jumpbox_port = 22
 rule_name = "workspace"
+
+# client_ip = 
 

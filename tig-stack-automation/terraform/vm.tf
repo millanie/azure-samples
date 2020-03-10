@@ -78,7 +78,7 @@ resource "azurerm_network_security_rule" "monitoring" {
 }
 
 resource "azurerm_network_security_rule" "grafana" {
-    name = "${var.rule_name}-grafana"
+    name = "grafana"
     priority = 110
     direction = "Inbound"
     access = "Allow"
