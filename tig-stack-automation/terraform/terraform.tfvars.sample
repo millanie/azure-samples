@@ -11,13 +11,16 @@ vm_sku = "Standard_DS2_v2"
 admin_user = "azuser"
 # password = 
 
-os_sku = ["OpenLogic","CentOS","7.6","latest"]
+# os_sku = ["OpenLogic","CentOS","7.6","latest"]
+os_sku = ["MicrosoftWindowsServer","WindowsServer","2016-Datacenter","latest"]
 
 ### ansible control server 
 # jumpbox_ip = 
-jumpbox_port = 22
+ssh_port = 22
+rdp_port = 3389
 rule_name = "workspace"
 
 ### grafana
 # client_ip = 
 grafana_port = 3000 
+

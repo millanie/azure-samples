@@ -14,7 +14,8 @@ variable "vm_sku" {default = "Standard_DS1_V2"}
 variable "os_sku" {default = []}
 
 variable "jumpbox_ip" {default = ""}
-variable "jumpbox_port" {default = ""}
+variable "ssh_port" {default = ""}
+variable "rdp_port" {default = ""}
 variable "rule_name" {default = ""}
 
 variable "client_ip" {default = ""}
