@@ -5,22 +5,23 @@ location = "eastus"
 vnet_name = "monitoring"
 vnet_cidr = "10.8.0.0/16"
 subnet_prefixes = ["10.8.0.0/24"]
+subnet_names = ["subnet1"]
 
 vm_name = "monitoring-tig"
 vm_sku = "Standard_DS2_v2"
 admin_user = "azuser"
 # password = 
 
-# os_sku = ["OpenLogic","CentOS","7.6","latest"]
-os_sku = ["MicrosoftWindowsServer","WindowsServer","2016-Datacenter","latest"]
+l_os_sku = ["OpenLogic","CentOS","7.6","latest"]
+w_os_sku = ["MicrosoftWindowsServer","WindowsServer","2016-Datacenter","latest"]
 
 ### ansible control server 
 # jumpbox_ip = 
+# client_ip = 
 ssh_port = 22
 rdp_port = 3389
 rule_name = "workspace"
 
 ### grafana
-# client_ip = 
 grafana_port = 3000 
 
