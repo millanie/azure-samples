@@ -5,6 +5,12 @@ resource "random_string" "fqdn_win" {
  number  = false
 }
 
+resource "azurerm_availability_set" "wterraform" {
+  name                = "avsw-${var.vm_name}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+}
+
 resource "azurerm_public_ip" "wterraform" {
   name = "${var.vm_name}-w-pip"
   resource_group_name = var.resource_group_name

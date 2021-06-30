@@ -12,7 +12,6 @@ module "network" {
   subnet_prefixes = var.subnet_prefixes
 }
 
-
 ### attach nsg on the subnet
 # resource "azurerm_network_security_group" "example" {
 #   name                = "example-nsg"
