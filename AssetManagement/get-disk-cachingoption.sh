@@ -13,6 +13,6 @@ outfile="/tmp/vm-details.json"
 
 sh /tmp/vm-details.sh > $outfile
 
-sed -i '1i {' $outfile
-echo "}" >> $outfile
+sed -i '1i [' $outfile
+echo "]" >> $outfile
 
