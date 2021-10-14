@@ -1,0 +1,95 @@
+// VM 정보를 포함하는 테이블
+resources
+| where type =~ 'microsoft.compute/virtualMachines'
+| extend nics=array_length(properties.networkProfile.networkInterfaces)
+| mvexpand nic=properties.networkProfile.networkInterfaces limit 400
+| where nics == 1 or nic.properties.primary =~ 'true' or isempty(nic)
+//| where name == "{vm name}" // test
+| project
+        id,
+        name,
+        resourceGroup,
+        type,
+        kind,
+        location,
+        edgeZone = iff(tostring(extendedLocation.type) =~ 'EdgeZone', tostring(extendedLocation.name), '-'),
+        subscriptionId,
+        tags,
+        licenseType=case(
+            properties.licenseType =~ 'Windows_Server', 'Azure Hybrid Benefit for Windows',
+            properties.licenseType =~ 'Windows_Client', 'Windows client with multi-tenant hosting',
+            properties.licenseType =~ 'RHEL_BYOS', 'Azure Hybrid Benefit for Redhat',
+            properties.licenseType =~ 'SLES_BYOS', 'Azure Hybrid Benefit for SUSE',
+            'Not enabled'
+        ),
+        nics = coalesce(tostring(nics), '-'),
+        zones = coalesce(tostring(zones[0]), '-'),
+        os = case(
+            properties.storageProfile.osDisk.osType =~ 'Windows', 'Windows',
+            properties.storageProfile.osDisk.osType =~ 'Linux', 'Linux',
+            '-'
+        ),
+        usesManagedDisks = iff(
+            isnotempty(properties.storageProfile.osDisk.managedDisk), 'Yes',
+            'No'
+        ),
+        disks = coalesce(
+            tostring(
+                iff(isnotempty(properties.storageProfile.osDisk) and isnotnull(properties.storageProfile.osDisk), 1, 0) + coalesce(array_length(properties.storageProfile.dataDisks), 0)
+            ),
+            '-'
+        ),
+        source = coalesce(
+            case(
+                (isnotnull(properties.storageProfile.imageReference.publisher) and isnotempty(properties.storageProfile.imageReference.publisher)), 'Marketplace',
+                (isnotnull(properties.storageProfile.imageReference.id) and isnotempty(properties.storageProfile.imageReference.id) and properties.storageProfile.imageReference contains "Microsoft.Compute/images"), 'Image',
+                (isnotnull(properties.storageProfile.imageReference.id) and isnotempty(properties.storageProfile.imageReference.id) and properties.storageProfile.imageReference contains "Microsoft.Compute/galleries"), 'Shared image',
+                'Disk'
+            ),
+            '-'
+        ),
+        spotEvictionPolicy = case(
+            (properties.priority =~ "Low" or properties.priority =~ "Spot") and properties.evictionPolicy =~ "Deallocate", 'Stop / Deallocate',
+            (properties.priority =~ "Low" or properties.priority =~ "Spot"), 'Delete',
+            '-'
+        ),
+        spotEvictionType = case(
+            (properties.priority =~ "Low" or properties.priority =~ "Spot") and properties.billingProfile.maxPrice == -1, 'Capacity',
+            (properties.priority =~ "Low" or properties.priority =~ "Spot"), 'Price or capacity',
+            '-'
+        ),
+       spotPrice = case(
+            (properties.priority =~ "Low" or properties.priority =~ "Spot") and isnotnull(properties.billingProfile.maxPrice) and isnotempty(properties.billingProfile.maxPrice) and properties.billingProfile.maxPrice != -1, strcat("$ ", round(toreal(properties.billingProfile.maxPrice), 2)),
+            (properties.priority =~ "Low" or properties.priority =~ "Spot") and (isnull(properties.billingProfile.maxPrice) or isempty(properties.billingProfile.maxPrice)), 'Capacity',
+            '-'
+        ),
+        proximityPlacementGroup = coalesce(extract('/proximityPlacementGroups/(.*)', 1, tostring(properties.proximityPlacementGroup.id)), '-'),
+        host = coalesce(extract('/hosts/(.*)', 1, tostring(properties.host.id)), '-'),
+        availabilitySet = coalesce(extract('/availabilitySets/(.*)', 1, tostring(properties.availabilitySet.id)), '-'),
+        vmSize = coalesce(tostring(properties.hardwareProfile.vmSize), '-'),
+        computerName = coalesce(tostring(properties.osProfile.computerName), '-'),
+        hostname = coalesce(tostring(properties.extended.instanceView.computerName), '-'),
+        hyperVGeneration = coalesce(tostring(properties.extended.instanceView.hyperVGeneration), '-'),
+        nicId = tostring(tolower(nic.id)),
+        powerState = tostring(split(tolower(properties.extended.instanceView.powerState.code), "powerstate/")[1]),
+        provisioningState = tostring(properties.provisioningState),
+        scaleSet = coalesce(extract('/virtualMachineScaleSets/(.*)', 1, tostring(properties.virtualMachineScaleSet.id)), '-')
+| join  (
+    // VM별 여러 개의 NIC관련 정보들을 리스트로 만들어주는 테이블
+    resources 
+        | where type =~ 'Microsoft.Network/networkInterfaces' 
+        | extend ipConfigsCount=array_length(properties.ipConfigurations) 
+        | mvexpand ipconfig=properties.ipConfigurations limit 400
+        | where ipConfigsCount == 1 or ipconfig.properties.primary =~ 'true' 
+        | parse kind=regex tostring(ipconfig.properties.subnet.id) with '/virtualNetworks/' virtualNetwork '/subnets/' subnet 
+        //| where properties['virtualMachine'] contains ‘{vm name}’ //test
+        | summarize 
+            niclist = make_list(substring(id, indexof(id,'/networkInterfaces/')+19)), 
+            privateIPAddresses = make_list(privateIPAddress=tostring(ipconfig.properties.privateIPAddress)),
+            publicIpIds = make_list(publicIpId=tostring(ipconfig.properties.publicIPAddress.id)),
+            Subnets = make_list(subnet),
+            lbReferences=make_list(array_concat(    ipconfig.properties.loadBalancerInboundNatRules,    ipconfig.properties.loadBalancerBackendAddressPools,    ipconfig.properties.pplicationGatewayBackendAddressPools))
+        by vmName = substring(properties['virtualMachine'].id, indexof(properties['virtualMachine'].id, '/virtualMachines/')+17), virtualNetwork
+) on $left.name == $right.vmName
+| project id, name, hostname, resourceGroup, type, kind, location, subscriptionId, licenseType, nics, zones, os, usesManagedDisks, publicIpIds, disks, source, spotEvictionPolicy, spotEvictionType, spotPrice, proximityPlacementGroup, host, availabilitySet, vmSize, privateIPAddresses, Subnets, virtualNetwork, powerState, provisioningState, scaleSet, edgeZone, computerName, hyperVGeneration 
+
