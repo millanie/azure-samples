@@ -7,7 +7,8 @@ workspaceid=`az config get law.workspaceid --query value -o table | grep -v Resu
 
 az login --service-principal --username "${applicationId}" --password "${password}" --tenant "${tenantID}"
 
-QUERY="NWConnectionMonitorTestResult | project TimeGenerated, AvgRoundTripTimeMs, ChecksTotal, ChecksFailed, TestGroupName, TestConfigurationName, SourceName, DestinationName,SourceAddress,DestinationAddress | summarize AvgRTT=round(avg(AvgRoundTripTimeMs),2),FailedCount=sum(ChecksFailed), TotalTests=sum(ChecksTotal) by TestGroupName, SourceName, SourceAddress,DestinationName,DestinationAddress | extend LossPercent = FailedCount * 100 / TotalTests | project TestGroupName, LossPercent, AvgRTT,TotalTests, SourceName, SourceAddress, DestinationName, DestinationAddress"
+#### set the time range in query and the threshold for AvgRTT and LossPercent
+QUERY="NWConnectionMonitorTestResult | where TimeGenerated > ago(5m) | project TimeGenerated, AvgRoundTripTimeMs, ChecksTotal, ChecksFailed, TestGroupName, TestConfigurationName, SourceName, DestinationName,SourceAddress,DestinationAddress | summarize AvgRTT=round(avg(AvgRoundTripTimeMs),2),FailedCount=sum(ChecksFailed), TotalTests=sum(ChecksTotal) by TestGroupName, SourceName, SourceAddress,DestinationName,DestinationAddress | extend LossPercent = FailedCount * 100 / TotalTests | where AvgRTT > 30 or LossPercent > 20 | project SourceName, DestinationName, AvgRTT, LossPercent, TotalTests"
 
 outfile="/tmp/azmon-result.txt"
 
