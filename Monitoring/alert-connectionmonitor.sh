@@ -12,5 +12,5 @@ QUERY="NWConnectionMonitorTestResult | where TimeGenerated > ago(5m) | project T
 
 outfile="/tmp/azmon-result.txt"
 
-az monitor log-analytics query -w "${workspaceid}" --analytics-query "${QUERY}" -o table | grep "PrimaryResult" >> ${outfile}
+az monitor log-analytics query -w "${workspaceid}" --analytics-query "${QUERY}" --query '[].{TableName:TableName, Source:SourceName, Destination:DestinationName, totalTests:TotalTests, avgRTT:AvgRTT, lossPercent:LossPercent}' -o table | grep "PrimaryResult" >> ${outfile}
 
